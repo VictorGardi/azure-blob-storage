@@ -1,6 +1,7 @@
 {
     "domain": "azure_blob_sync",
     "name": "Azure Blob Sync",
+    "integration_type": "service",
     "documentation": "https://github.com/VictorGardi/azure-blob-sync",
     "dependencies": [],
     "codeowners": ["@VictorGardi"],

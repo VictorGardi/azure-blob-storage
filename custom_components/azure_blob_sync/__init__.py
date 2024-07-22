@@ -51,7 +51,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config.get(DOMAIN)
     if conf is None:
         return False
-    print(conf)
 
     azure_blob_sync = AzureBlobSync(conf[CONF_CONNECTION_STRING])
 
