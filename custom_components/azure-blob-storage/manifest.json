@@ -1,0 +1,10 @@
+{
+    "domain": "azure_blob_sync",
+    "name": "Azure Blob Sync",
+    "documentation": "https://github.com/VictorGardi/azure-blob-sync",
+    "dependencies": [],
+    "codeowners": ["@VictorGardi"],
+    "requirements": ["azure-storage-blob[aio]==12.20.0"],
+    "iot_class": "cloud_push",
+    "version": "0.1.0"
+}

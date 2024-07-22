@@ -1,0 +1,2 @@
+sync:
+  description: Sync local folder to Azure Blob Storage.
