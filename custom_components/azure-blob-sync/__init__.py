@@ -6,7 +6,6 @@ from homeassistant.helpers.event import (
 from datetime import timedelta
 import voluptuous as vol
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -52,6 +51,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config.get(DOMAIN)
     if conf is None:
         return False
+    print(conf)
 
     azure_blob_sync = AzureBlobSync(conf[CONF_CONNECTION_STRING])
 
@@ -70,18 +70,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         interval = timedelta(minutes=conf[CONF_SYNC_INTERVAL])
         async_track_time_interval(hass, sync_folders, interval)
 
-    if (
-        SYNC_MODE_EVENT in sync_modes
-        and CONF_TRIGGER_ENTITY in conf
-        and CONF_TRIGGER_STATE in conf
-    ):
-        entity_id = conf[CONF_TRIGGER_ENTITY]
-        trigger_state = conf[CONF_TRIGGER_STATE]
+    #if (
+    #    SYNC_MODE_EVENT in sync_modes
+    #    and CONF_TRIGGER_ENTITY in conf
+    #    and CONF_TRIGGER_STATE in conf
+    #):
+    #    entity_id = conf[CONF_TRIGGER_ENTITY]
+    #    trigger_state = conf[CONF_TRIGGER_STATE]
 
-        async def state_change_listener(new_state):
-            if new_state.state == trigger_state:
-                await sync_folders()
+    #    async def state_change_listener(new_state):
+    #        if new_state.state == trigger_state:
+    #            await sync_folders()
 
-        async_track_state_change(hass, entity_id, state_change_listener)
+    #    async_track_state_change(hass, entity_id, state_change_listener)
 
     return True
