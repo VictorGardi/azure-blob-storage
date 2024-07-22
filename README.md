@@ -1,2 +1,2 @@
-# azure-blob-storage
-Home assistant integration to work with azure blob storage. 
+# azure-blob-sync
+Home assistant integration to sync a directory with Home assistant data to Azure blob storage. 
