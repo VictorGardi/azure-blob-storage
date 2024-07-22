@@ -1,10 +1,13 @@
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.event import (
     async_track_state_change,
     async_track_time_interval,
 )
 from datetime import timedelta
+import voluptuous as vol
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
@@ -13,6 +16,7 @@ from .const import (
     CONF_LOCAL_FOLDER,
     CONF_BLOB_FOLDER,
     CONF_SYNC_MODES,
+    SYNC_MODE_MANUAL,
     SYNC_MODE_SCHEDULE,
     SYNC_MODE_EVENT,
     CONF_SYNC_INTERVAL,
@@ -21,34 +25,61 @@ from .const import (
 )
 from .azure_blob_sync import AzureBlobSync
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_CONNECTION_STRING): cv.string,
+                vol.Required(CONF_CONTAINER_NAME): cv.string,
+                vol.Required(CONF_LOCAL_FOLDER): cv.string,
+                vol.Required(CONF_BLOB_FOLDER): cv.string,
+                vol.Required(CONF_SYNC_MODES): vol.All(
+                    cv.ensure_list,
+                    [vol.In([SYNC_MODE_MANUAL, SYNC_MODE_SCHEDULE, SYNC_MODE_EVENT])],
+                ),
+                vol.Optional(CONF_SYNC_INTERVAL): cv.positive_int,
+                vol.Optional(CONF_TRIGGER_ENTITY): cv.entity_id,
+                vol.Optional(CONF_TRIGGER_STATE): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Azure Blob Sync from a config entry."""
-    azure_blob_sync = AzureBlobSync(entry.data[CONF_CONNECTION_STRING])
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Azure Blob Sync from YAML configuration."""
+    conf = config.get(DOMAIN)
+    if conf is None:
+        return False
+
+    azure_blob_sync = AzureBlobSync(conf[CONF_CONNECTION_STRING])
 
     async def sync_folders():
         """Sync folders."""
-        await azure_blob_sync.create_container(entry.data[CONF_CONTAINER_NAME])
+        await azure_blob_sync.create_container(conf[CONF_CONTAINER_NAME])
         await azure_blob_sync.sync_folder_to_blob(
-            entry.data[CONF_CONTAINER_NAME],
-            entry.data[CONF_LOCAL_FOLDER],
-            entry.data[CONF_BLOB_FOLDER],
+            conf[CONF_CONTAINER_NAME], conf[CONF_LOCAL_FOLDER], conf[CONF_BLOB_FOLDER]
         )
 
     hass.services.async_register(DOMAIN, "sync", sync_folders)
 
-    sync_modes = entry.data[CONF_SYNC_MODES]
+    sync_modes = conf[CONF_SYNC_MODES]
 
-    if SYNC_MODE_SCHEDULE in sync_modes:
-        interval = timedelta(minutes=entry.data[CONF_SYNC_INTERVAL])
+    if SYNC_MODE_SCHEDULE in sync_modes and CONF_SYNC_INTERVAL in conf:
+        interval = timedelta(minutes=conf[CONF_SYNC_INTERVAL])
         async_track_time_interval(hass, sync_folders, interval)
 
-    if SYNC_MODE_EVENT in sync_modes:
-        entity_id = entry.data[CONF_TRIGGER_ENTITY]
-        trigger_state = entry.data[CONF_TRIGGER_STATE]
+    if (
+        SYNC_MODE_EVENT in sync_modes
+        and CONF_TRIGGER_ENTITY in conf
+        and CONF_TRIGGER_STATE in conf
+    ):
+        entity_id = conf[CONF_TRIGGER_ENTITY]
+        trigger_state = conf[CONF_TRIGGER_STATE]
 
-        async def state_change_listener(entity):
-            if entity.state == trigger_state:
+        async def state_change_listener(new_state):
+            if new_state.state == trigger_state:
                 await sync_folders()
 
         async_track_state_change(hass, entity_id, state_change_listener)
