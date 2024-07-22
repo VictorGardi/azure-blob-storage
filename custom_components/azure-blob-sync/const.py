@@ -1,4 +1,4 @@
-DOMAIN = "azure_blob_sync"
+DOMAIN = "azure-blob-sync"
 CONF_CONNECTION_STRING = "connection_string"
 CONF_CONTAINER_NAME = "container_name"
 CONF_LOCAL_FOLDER = "local_folder"
