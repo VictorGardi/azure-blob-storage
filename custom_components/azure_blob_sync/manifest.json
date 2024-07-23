@@ -1,11 +1,11 @@
 {
     "domain": "azure_blob_sync",
+    "version": "0.1.0",
     "name": "Azure Blob Sync",
     "integration_type": "service",
     "documentation": "https://github.com/VictorGardi/azure-blob-sync",
+    "requirements": ["azure-storage-blob[aio]==12.20.0"],
     "dependencies": [],
     "codeowners": ["@VictorGardi"],
-    "requirements": ["azure-storage-blob[aio]==12.20.0"],
-    "iot_class": "cloud_push",
-    "version": "0.1.0"
+    "iot_class": "cloud_push"
 }

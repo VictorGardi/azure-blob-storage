@@ -1,9 +1,10 @@
+import logging
+from datetime import timedelta
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import (
     async_track_state_change,
     async_track_time_interval,
 )
-from datetime import timedelta
 import voluptuous as vol
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -44,15 +45,18 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Azure Blob Sync from YAML configuration."""
+    _LOGGER.info("Setting up azure blob sync")
     conf = config.get(DOMAIN)
     if conf is None:
         return False
 
     azure_blob_sync = AzureBlobSync(conf[CONF_CONNECTION_STRING])
+    _LOGGER.info("init class")
 
     async def sync_folders():
         """Sync folders."""
@@ -62,6 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     hass.services.async_register(DOMAIN, "sync", sync_folders)
+    _LOGGER.info("registered service")
 
     sync_modes = conf[CONF_SYNC_MODES]
 
