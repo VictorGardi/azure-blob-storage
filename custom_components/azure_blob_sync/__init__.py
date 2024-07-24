@@ -50,14 +50,20 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Azure Blob Sync from YAML configuration."""
-    _LOGGER.info("Setting up azure blob sync")
+    _LOGGER.debug("Starting async_setup for azure_blob_sync")
     conf = config.get(DOMAIN)
     if conf is None:
+        _LOGGER.error("No configuration found for azure_blob_sync")
         return False
-
-    azure_blob_sync = AzureBlobSync(conf[CONF_CONNECTION_STRING])
-    _LOGGER.info("init class")
-
+    
+    _LOGGER.debug("Configuration found: %s", conf)
+    
+    try:
+        azure_blob_sync = AzureBlobSync(conf[CONF_CONNECTION_STRING])
+        _LOGGER.debug("AzureBlobSync instance created successfully")
+    except Exception as e:
+        _LOGGER.error("Failed to create AzureBlobSync instance: %s", str(e))
+        return False
     async def sync_folders():
         """Sync folders."""
         await azure_blob_sync.create_container(conf[CONF_CONTAINER_NAME])
