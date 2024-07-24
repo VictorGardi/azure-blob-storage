@@ -71,6 +71,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             """Sync folders."""
             _LOGGER.info("Starting folder sync")
             try:
+                _LOGGER.debug(conf[CONF_CONTAINER_NAME])
+                _LOGGER.debug(conf[CONF_LOCAL_FOLDER])
+                _LOGGER.debug(conf[CONF_BLOB_FOLDER])
                 await azure_blob_sync.create_container(conf[CONF_CONTAINER_NAME])
                 await azure_blob_sync.sync_folder_to_blob(
                     conf[CONF_CONTAINER_NAME], conf[CONF_LOCAL_FOLDER], conf[CONF_BLOB_FOLDER]
