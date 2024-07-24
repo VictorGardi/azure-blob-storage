@@ -43,11 +43,15 @@ class AzureBlobSync:
                     print(file)
                     local_file_path = os.path.join(root, file)
                     relative_path = os.path.relpath(local_file_path, local_folder_path)
-                    blob_path = os.path.join(blob_folder_path, relative_path).replace("\\", "/")
+                    blob_path = os.path.join(blob_folder_path, relative_path).replace(
+                        "\\", "/"
+                    )
 
-                    task = self._upload_file(container_client, local_file_path, blob_path)
+                    task = self._upload_file(
+                        container_client, local_file_path, blob_path
+                    )
                     tasks.append(task)
-            #tasks = [
+            # tasks = [
             #    self._upload_file(
             #        container_client,
             #        os.path.join(root, file),
@@ -58,7 +62,7 @@ class AzureBlobSync:
             #    )
             #    for root, _, files in os.walk(local_folder_path)
             #    for file in files
-            #]
+            # ]
             await asyncio.gather(*tasks)
 
     @staticmethod
