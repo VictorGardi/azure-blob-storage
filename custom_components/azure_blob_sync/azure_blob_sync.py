@@ -37,18 +37,28 @@ class AzureBlobSync:
     ) -> None:
         async with await self._get_blob_service_client() as client:
             container_client = client.get_container_client(container_name)
-            tasks = [
-                self._upload_file(
-                    container_client,
-                    os.path.join(root, file),
-                    os.path.join(
-                        blob_folder_path,
-                        os.path.relpath(os.path.join(root, file), local_folder_path),
-                    ).replace("\\", "/"),
-                )
-                for root, _, files in os.walk(local_folder_path)
-                for file in files
-            ]
+            tasks = []
+            for root, _, files in os.walk(local_folder_path):
+                for file in files:
+                    print(file)
+                    local_file_path = os.path.join(root, file)
+                    relative_path = os.path.relpath(local_file_path, local_folder_path)
+                    blob_path = os.path.join(blob_folder_path, relative_path).replace("\\", "/")
+
+                    task = self._upload_file(container_client, local_file_path, blob_path)
+                    tasks.append(task)
+            #tasks = [
+            #    self._upload_file(
+            #        container_client,
+            #        os.path.join(root, file),
+            #        os.path.join(
+            #            blob_folder_path,
+            #            os.path.relpath(os.path.join(root, file), local_folder_path),
+            #        ).replace("\\", "/"),
+            #    )
+            #    for root, _, files in os.walk(local_folder_path)
+            #    for file in files
+            #]
             await asyncio.gather(*tasks)
 
     @staticmethod
