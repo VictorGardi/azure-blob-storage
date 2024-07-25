@@ -111,7 +111,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.info("Registered 'sync_all' service")
 
         # Set up individual folder syncs and triggers
-        for folder_config in conf[CONF_FOLDERS]:
+        for index, folder_config in enumerate(conf[CONF_FOLDERS]):
             local_folder = folder_config[CONF_LOCAL_FOLDER]
             blob_folder = folder_config[CONF_BLOB_FOLDER]
             sync_modes = folder_config[CONF_SYNC_MODES]
@@ -125,10 +125,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 await sync_folder(l_folder, b_folder)
 
             hass.services.async_register(
-                DOMAIN, f"sync_folder_{local_folder}", sync_single_folder
+                DOMAIN, f"sync_folder_{index}", sync_single_folder
             )
             _LOGGER.info(
-                f"Registered 'sync_folder_{local_folder}' service for {local_folder} to {blob_folder}"
+                f"Registered 'sync_folder_{index}' service for {local_folder} to {blob_folder}"
             )
 
             # Set up scheduled sync if configured
