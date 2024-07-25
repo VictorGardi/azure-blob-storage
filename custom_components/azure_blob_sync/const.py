@@ -1,7 +1,7 @@
 DOMAIN = "azure_blob_sync"
 CONF_CONNECTION_STRING = "connection_string"
 CONF_CONTAINER_NAME = "container_name"
-CONF_FOLDERS = "folder1"
+CONF_FOLDERS = "folders"
 CONF_LOCAL_FOLDER = "local_folder"
 CONF_BLOB_FOLDER = "blob_folder"
 CONF_SYNC_MODES = "sync_modes"
