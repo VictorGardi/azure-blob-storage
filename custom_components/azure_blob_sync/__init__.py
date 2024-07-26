@@ -63,11 +63,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 _LOGGER = logging.getLogger(__name__)
 
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Azure Blob Sync from YAML configuration."""
     _LOGGER.debug("Starting async_setup for azure_blob_sync")
-
+    
     try:
         conf = config.get(DOMAIN)
         if conf is None:
@@ -93,17 +92,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
                 _LOGGER.info(f"Sync completed for {local_folder} to {blob_folder}")
             except Exception as e:
-                _LOGGER.error(
-                    f"Error during sync of {local_folder} to {blob_folder}: {str(e)}"
-                )
+                _LOGGER.error(f"Error during sync of {local_folder} to {blob_folder}: {str(e)}")
 
         async def sync_all_folders(_: Optional[ServiceCall] = None):
             """Sync all configured folder pairs."""
             _LOGGER.info("Starting folder sync for all configured folders")
             for folder_config in conf[CONF_FOLDERS]:
-                await sync_folder(
-                    folder_config[CONF_LOCAL_FOLDER], folder_config[CONF_BLOB_FOLDER]
-                )
+                await sync_folder(folder_config[CONF_LOCAL_FOLDER], folder_config[CONF_BLOB_FOLDER])
             _LOGGER.info("Folder sync completed successfully for all folders")
 
         # Register global sync service
@@ -117,29 +112,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             sync_modes = folder_config[CONF_SYNC_MODES]
 
             # Register individual sync service
-            async def sync_single_folder(
-                _: Optional[ServiceCall] = None,
-                l_folder=local_folder,
-                b_folder=blob_folder,
-            ):
+            async def sync_single_folder(_: Optional[ServiceCall], l_folder=local_folder, b_folder=blob_folder):
                 await sync_folder(l_folder, b_folder)
 
-            hass.services.async_register(
-                DOMAIN, f"sync_folder_{index}", sync_single_folder
-            )
-            _LOGGER.info(
-                f"Registered 'sync_folder_{index}' service for {local_folder} to {blob_folder}"
-            )
+            hass.services.async_register(DOMAIN, f"sync_folder_{index}", sync_single_folder)
+            _LOGGER.info(f"Registered 'sync_folder_{index}' service for {local_folder} to {blob_folder}")
 
             # Set up scheduled sync if configured
             if SYNC_MODE_SCHEDULE in sync_modes and CONF_SYNC_INTERVAL in folder_config:
                 interval = timedelta(minutes=folder_config[CONF_SYNC_INTERVAL])
-                async_track_time_interval(
-                    hass, lambda _: sync_single_folder(None), interval
-                )
-                _LOGGER.info(
-                    f"Scheduled sync set up for folder {local_folder} with interval: {folder_config[CONF_SYNC_INTERVAL]} minutes"
-                )
+                async_track_time_interval(hass, lambda _: sync_single_folder(None), interval)
+                _LOGGER.info(f"Scheduled sync set up for folder {index} with interval: {folder_config[CONF_SYNC_INTERVAL]} minutes")
 
             # Set up event-based sync if configured
             if (
@@ -150,14 +133,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 entity_id = folder_config[CONF_TRIGGER_ENTITY]
                 trigger_state = folder_config[CONF_TRIGGER_STATE]
 
-                async def state_change_listener(entity_id, old_state, new_state):
-                    if new_state and new_state.state == trigger_state:
-                        await sync_single_folder(None)
+                def create_state_change_listener(local_f, blob_f):
+                    async def state_change_listener(entity_id, old_state, new_state):
+                        if new_state and new_state.state == trigger_state:
+                            await sync_folder(local_f, blob_f)
+                    return state_change_listener
 
-                async_track_state_change(hass, entity_id, state_change_listener)
-                _LOGGER.info(
-                    f"Event-based sync set up for folder {local_folder}, entity: {entity_id}, trigger state: {trigger_state}"
-                )
+                listener = create_state_change_listener(local_folder, blob_folder)
+                async_track_state_change(hass, entity_id, listener)
+                _LOGGER.info(f"Event-based sync set up for folder {index}, entity: {entity_id}, trigger state: {trigger_state}")
 
         _LOGGER.info("Azure Blob Sync setup completed successfully")
         return True
